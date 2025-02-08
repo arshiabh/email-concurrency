@@ -18,12 +18,15 @@ func main() {
 	infoLogger := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLogger := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	app := Config{
+	app := &application{
 		Session:    session,
 		DB:         db,
 		Wait:       &wg,
 		InfoLogger: infoLogger,
 		ErroLogger: errorLogger,
 	}
-	
+	mux := app.mount()
+	if err := app.run(mux); err != nil {
+		app.ErroLogger.Fatal(err)
+	}
 }

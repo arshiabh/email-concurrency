@@ -13,7 +13,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-type Config struct {
+type application struct {
 	Session    *scs.SessionManager
 	DB         *sql.DB
 	InfoLogger *log.Logger
