@@ -25,6 +25,7 @@ func main() {
 		InfoLogger: infoLogger,
 		ErroLogger: errorLogger,
 	}
+	
 	mux := app.mount()
 	if err := app.run(mux); err != nil {
 		app.ErroLogger.Fatal(err)

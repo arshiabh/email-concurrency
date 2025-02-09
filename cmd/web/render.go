@@ -17,7 +17,7 @@ type TemplateData struct {
 	Flash           string
 	Warning         string
 	Error           string
-	IsAuthenticated bool
+	Authenticated bool
 	Now             time.Time
 }
 
@@ -51,7 +51,7 @@ func (app *application) AddDefaultData(td *TemplateData, r *http.Request) *Templ
 	td.Warning = app.Session.PopString(r.Context(), "warning")
 	td.Error = app.Session.PopString(r.Context(), "flash")
 	if app.IsAuthenticated(r) {
-		td.IsAuthenticated = true
+		td.Authenticated = true
 	}
 	td.Now = time.Now()
 	return td
