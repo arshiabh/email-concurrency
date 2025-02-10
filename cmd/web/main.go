@@ -7,6 +7,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/arshiabh/email-concurrency/cmd/web/data"
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -19,6 +20,7 @@ func main() {
 
 	infoLogger := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLogger := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	store := data.New(db)
 
 	app := &application{
 		Session:    session,
@@ -26,6 +28,7 @@ func main() {
 		Wait:       &wg,
 		InfoLogger: infoLogger,
 		ErroLogger: errorLogger,
+		Store:      &store,
 	}
 	//listern for shutdown
 	go app.listenForShutdown()

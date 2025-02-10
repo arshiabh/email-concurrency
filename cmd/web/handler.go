@@ -27,5 +27,5 @@ func (app *application) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Request) {
-
+	
 }

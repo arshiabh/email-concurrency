@@ -10,6 +10,7 @@ import (
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/arshiabh/email-concurrency/cmd/web/data"
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -19,6 +20,7 @@ type application struct {
 	InfoLogger *log.Logger
 	ErroLogger *log.Logger
 	Wait       *sync.WaitGroup
+	Store      *data.Store
 }
 
 func initDB() *sql.DB {
