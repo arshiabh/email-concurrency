@@ -12,7 +12,7 @@ func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 	r.Use(app.sessionload)
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Group(func(r chi.Router) {
 		r.Get("/", app.HandleHome)
 		r.Get("/login", app.HandleLogin)
 		r.Post("/login", app.HandlePostLogin)

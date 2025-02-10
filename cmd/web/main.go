@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
@@ -25,9 +27,27 @@ func main() {
 		InfoLogger: infoLogger,
 		ErroLogger: errorLogger,
 	}
-	
+	//listern for shutdown
+	go app.listenForShutdown()
+
 	mux := app.mount()
 	if err := app.run(mux); err != nil {
 		app.ErroLogger.Fatal(err)
 	}
+}
+
+func (app *application) listenForShutdown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	//block and wait to recive
+	<-quit
+	app.shutdown()
+	os.Exit(0)
+}
+
+func (app *application) shutdown() {
+	app.InfoLogger.Println("cleaning for shutdown")
+	// wait for other go routine
+	app.Wait.Wait()
+	app.InfoLogger.Println("closing server")
 }
