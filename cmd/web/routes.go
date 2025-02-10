@@ -13,7 +13,13 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(app.sessionload)
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Get("/", app.Index)
+		r.Get("/", app.HandleHome)
+		r.Get("/login", app.HandleLogin)
+		r.Post("/login", app.HandlePostLogin)
+		r.Get("/register", app.HandleRegister)
+		r.Post("/register", app.HandlePostRegister)
+		r.Get("/logout", app.HandleLogout)
+		r.Get("/activate-account", app.HandleActivateUser)
 	})
 	return r
 }
