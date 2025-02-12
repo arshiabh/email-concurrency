@@ -317,6 +317,5 @@ func (u *User) PasswordMatches(plainText string) (bool, error) {
 			return false, err
 		}
 	}
-
 	return true, nil
 }

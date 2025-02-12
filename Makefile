@@ -1,8 +1,8 @@
 BINARY_NAME=myapp
 BUILD_DIR=./cmd/web/bin
-PORT=8000
+PORT=8080
 DSN="host=host.docker.internal port=1234 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5"
-REDIS="host.docker.internal:6379"
+REDIS="127.0.0.1:6380"
 
 ## build: Build binary
 build:
