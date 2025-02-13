@@ -22,6 +22,22 @@ type application struct {
 	ErroLogger *log.Logger
 	Wait       *sync.WaitGroup
 	Store      *data.Store
+	Mailer     Mail
+}
+
+func createMail() Mail {
+	return Mail{
+		Domain:      "localhost",
+		Host:        "localhost",
+		Port:        1025,
+		Encryption:  "none",
+		FromName:    "info",
+		FromAddress: "info@gmail.com",
+		Wait:        &sync.WaitGroup{},
+		MailerChan:  make(chan Message, 100),
+		ErrorChan:   make(chan error),
+		DoneChan:    make(chan bool),
+	}
 }
 
 func initDB() *sql.DB {

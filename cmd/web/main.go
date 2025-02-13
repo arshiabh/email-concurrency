@@ -21,6 +21,7 @@ func main() {
 	infoLogger := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLogger := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	store := data.New(db)
+	mail := createMail()
 
 	app := &application{
 		Session:    session,
@@ -29,10 +30,12 @@ func main() {
 		InfoLogger: infoLogger,
 		ErroLogger: errorLogger,
 		Store:      &store,
+		Mailer:     mail,
 	}
 	//listern for shutdown
 	go app.listenForShutdown()
-
+	//listen for email
+	go app.listernForEmail()
 	mux := app.mount()
 	if err := app.run(mux); err != nil {
 		app.ErroLogger.Fatal(err)

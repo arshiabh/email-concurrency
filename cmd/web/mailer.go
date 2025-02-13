@@ -37,9 +37,23 @@ type Message struct {
 	Template    string
 }
 
+func (app *application) listernForEmail() {
+	for {
+		select {
+		case msg := <-app.Mailer.MailerChan:
+			go app.Mailer.sendMail(msg, make(chan error))
+		case err := <-app.Mailer.ErrorChan:
+			app.ErroLogger.Println(err)
+		case <-app.Mailer.DoneChan:
+			return
+		}
+	}
+}
+
 // a function to listen for messages on the MailerChan
 
 func (m *Mail) sendMail(msg Message, errorChan chan error) {
+	defer m.Wait.Done()
 	if msg.Template == "" {
 		msg.Template = "mail"
 	}
@@ -145,8 +159,8 @@ func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
 
 func (m *Mail) inlineCSS(s string) (string, error) {
 	options := premailer.Options{
-		RemoveClasses: false,
-		CssToAttributes: false,
+		RemoveClasses:     false,
+		CssToAttributes:   false,
 		KeepBangImportant: true,
 	}
 
