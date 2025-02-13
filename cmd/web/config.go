@@ -25,7 +25,7 @@ type application struct {
 	Mailer     Mail
 }
 
-func createMail() Mail {
+func createMail(wg *sync.WaitGroup) Mail {
 	return Mail{
 		Domain:      "localhost",
 		Host:        "localhost",
@@ -33,7 +33,7 @@ func createMail() Mail {
 		Encryption:  "none",
 		FromName:    "info",
 		FromAddress: "info@gmail.com",
-		Wait:        &sync.WaitGroup{},
+		Wait:        wg,
 		MailerChan:  make(chan Message, 100),
 		ErrorChan:   make(chan error),
 		DoneChan:    make(chan bool),

@@ -39,6 +39,12 @@ func (app *application) HandlePostLogin(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if !valid {
+		msg := Message{
+			Data:    "invalid password",
+			To:      user.Email,
+			Subject: "invalid password",
+		}
+		app.sendEmail(msg)
 		app.Session.Put(r.Context(), "error", "invalid password")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return

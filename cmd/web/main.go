@@ -16,12 +16,13 @@ import (
 func main() {
 	db := initDB()
 	session := initSession()
+	//use the same waitgroup for rest service to avoid error
 	var wg sync.WaitGroup
 
 	infoLogger := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLogger := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	store := data.New(db)
-	mail := createMail()
+	mail := createMail(&wg)
 
 	app := &application{
 		Session:    session,
@@ -55,5 +56,12 @@ func (app *application) shutdown() {
 	app.InfoLogger.Println("cleaning for shutdown")
 	// wait for other go routine
 	app.Wait.Wait()
+	//after wait all wg done trigger done to clean
+	app.Mailer.DoneChan <- true
+
 	app.InfoLogger.Println("closing server")
+	//close chan after to avoid getting data
+	close(app.Mailer.MailerChan)
+	close(app.Mailer.DoneChan)
+	close(app.Mailer.ErrorChan)
 }

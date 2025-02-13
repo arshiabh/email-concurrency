@@ -57,27 +57,21 @@ func (m *Mail) sendMail(msg Message, errorChan chan error) {
 	if msg.Template == "" {
 		msg.Template = "mail"
 	}
-
 	if msg.From == "" {
 		msg.From = m.FromAddress
 	}
-
 	if msg.FromName == "" {
 		msg.FromName = m.FromName
 	}
-
 	data := map[string]any{
 		"message": msg.Data,
 	}
-
 	msg.DataMap = data
-
 	// build html mail
 	formattedMessage, err := m.buildHTMLMessage(msg)
 	if err != nil {
 		errorChan <- err
 	}
-
 	// build plain text mail
 	plainMessage, err := m.buildPlainTextMessage(msg)
 	if err != nil {
