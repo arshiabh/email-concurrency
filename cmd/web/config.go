@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/gob"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -26,8 +25,7 @@ type application struct {
 }
 
 func initDB() *sql.DB {
-	dsn := os.Getenv("addr")
-	fmt.Println(dsn)
+	_ = os.Getenv("addr")
 	db, err := sql.Open("pgx", "host=localhost port=1234 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5")
 	if err != nil {
 		log.Panic("can not connect to db")

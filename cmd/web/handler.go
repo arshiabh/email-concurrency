@@ -60,7 +60,9 @@ func (app *application) HandlePostRegister(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) HandleLogout(w http.ResponseWriter, r *http.Request) {
-
+	_ = app.Session.Destroy(r.Context())
+	_ = app.Session.RenewToken(r.Context())
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Request) {
