@@ -20,6 +20,25 @@ func (app *application) mount() http.Handler {
 		r.Post("/register", app.HandlePostRegister)
 		r.Get("/logout", app.HandleLogout)
 		r.Get("/activate-account", app.HandleActivateUser)
+
+		r.Get("/test-mail", func(w http.ResponseWriter, r *http.Request) {
+			m := Mail{
+				Domain:      "localhost",
+				Host:        "localhost",
+				Port:        1025,
+				Encryption:  "none",
+				FromAddress: "info@email.com",
+				FromName:    "info",
+				ErrorChan:   make(chan error),
+			}
+
+			msg := Message{
+				Data:    "hello, world",
+				To:      "me@here.com",
+				Subject: "test",
+			}
+			m.sendMail(msg, make(chan error))
+		})
 	})
 	return r
 }

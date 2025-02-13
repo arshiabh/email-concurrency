@@ -27,70 +27,83 @@ type Mail struct {
 }
 
 type Message struct {
-	From       string
-	FromName   string
-	To         string
-	Subject    string
-	Attachment []string
-	Data       any
-	MapData    map[string]any
-	Template   string
+	From        string
+	FromName    string
+	To          string
+	Subject     string
+	Attachments []string
+	Data        any
+	DataMap     map[string]any
+	Template    string
 }
 
-func (m *Mail) SendMail(msg Message, errorChan chan error) {
-	if msg.From == "" {
-		msg.From = m.FromAddress
-	}
-	if msg.FromName == "" {
-		msg.FromName = m.FromName
-	}
+// a function to listen for messages on the MailerChan
+
+func (m *Mail) sendMail(msg Message, errorChan chan error) {
 	if msg.Template == "" {
 		msg.Template = "mail"
 	}
+
+	if msg.From == "" {
+		msg.From = m.FromAddress
+	}
+
+	if msg.FromName == "" {
+		msg.FromName = m.FromName
+	}
+
 	data := map[string]any{
 		"message": msg.Data,
 	}
-	msg.MapData = data
 
-	formattedMessage, err := m.buildHtmlMessage(msg)
+	msg.DataMap = data
+
+	// build html mail
+	formattedMessage, err := m.buildHTMLMessage(msg)
 	if err != nil {
 		errorChan <- err
 	}
-	plainMessage, err := m.buildPlainMessage(msg)
+
+	// build plain text mail
+	plainMessage, err := m.buildPlainTextMessage(msg)
 	if err != nil {
 		errorChan <- err
 	}
-	//set up smpt server then connect it
+
 	server := mail.NewSMTPClient()
 	server.Host = m.Host
+	server.Port = m.Port
 	server.Username = m.Username
 	server.Password = m.Password
 	server.Encryption = m.getEncryption(m.Encryption)
 	server.KeepAlive = false
-	server.ConnectTimeout = time.Second * 10
-	server.SendTimeout = time.Second * 10
+	server.ConnectTimeout = 10 * time.Second
+	server.SendTimeout = 10 * time.Second
 
-	smptClient, err := server.Connect()
+	smtpClient, err := server.Connect()
 	if err != nil {
 		errorChan <- err
 	}
-	//new email
+
 	email := mail.NewMSG()
 	email.SetFrom(msg.From).AddTo(msg.To).SetSubject(msg.Subject)
 
 	email.SetBody(mail.TextPlain, plainMessage)
 	email.AddAlternative(mail.TextHTML, formattedMessage)
-	if len(msg.Attachment) > 0 {
-		for _, value := range msg.Attachment {
-			email.AddAttachment(value)
+
+	if len(msg.Attachments) > 0 {
+		for _, x := range msg.Attachments {
+			email.AddAttachment(x)
 		}
 	}
-	if err := email.Send(smptClient); err != nil {
+
+	err = email.Send(smtpClient)
+	if err != nil {
 		errorChan <- err
 	}
 }
 
-func (m *Mail) buildHtmlMessage(msg Message) (string, error) {
+func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	templateToRender := fmt.Sprintf("./cmd/web/templates/%s.html.gohtml", msg.Template)
 
 	t, err := template.New("email-html").ParseFiles(templateToRender)
@@ -99,7 +112,7 @@ func (m *Mail) buildHtmlMessage(msg Message) (string, error) {
 	}
 
 	var tpl bytes.Buffer
-	if err = t.ExecuteTemplate(&tpl, "body", msg.MapData); err != nil {
+	if err = t.ExecuteTemplate(&tpl, "body", msg.DataMap); err != nil {
 		return "", err
 	}
 
@@ -112,25 +125,28 @@ func (m *Mail) buildHtmlMessage(msg Message) (string, error) {
 	return formattedMessage, nil
 }
 
-func (m *Mail) buildPlainMessage(msg Message) (string, error) {
+func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
 	templateToRender := fmt.Sprintf("./cmd/web/templates/%s.plain.gohtml", msg.Template)
 
-	t, err := template.New("plain-message").ParseFiles(templateToRender)
+	t, err := template.New("email-plain").ParseFiles(templateToRender)
 	if err != nil {
 		return "", err
 	}
+
 	var tpl bytes.Buffer
-	if err := t.ExecuteTemplate(&tpl, "body", msg.MapData); err != nil {
+	if err = t.ExecuteTemplate(&tpl, "body", msg.DataMap); err != nil {
 		return "", err
 	}
+
 	plainMessage := tpl.String()
+
 	return plainMessage, nil
 }
 
 func (m *Mail) inlineCSS(s string) (string, error) {
 	options := premailer.Options{
-		RemoveClasses:     false,
-		CssToAttributes:   false,
+		RemoveClasses: false,
+		CssToAttributes: false,
 		KeepBangImportant: true,
 	}
 
