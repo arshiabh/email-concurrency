@@ -19,7 +19,7 @@ func (app *application) mount() http.Handler {
 		r.Get("/register", app.HandleRegister)
 		r.Post("/register", app.HandlePostRegister)
 		r.Get("/logout", app.HandleLogout)
-		r.Get("/activate-account", app.HandleActivateUser)
+		r.Get("/activate", app.HandleActivateUser)
 	})
 	return r
 }

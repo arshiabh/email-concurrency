@@ -70,8 +70,8 @@ func (app *application) HandlePostRegister(w http.ResponseWriter, r *http.Reques
 	//to-do validate form value we get
 	u := data.User{
 		Email:     r.Form.Get("email"),
-		FirstName: r.Form.Get("firstname"),
-		LastName:  r.Form.Get("lastname"),
+		FirstName: r.Form.Get("first-name"),
+		LastName:  r.Form.Get("last-name"),
 		Password:  r.Form.Get("password"),
 		IsAdmin:   0,
 		Active:    0,
@@ -89,9 +89,10 @@ func (app *application) HandlePostRegister(w http.ResponseWriter, r *http.Reques
 	app.InfoLogger.Println(signedurl)
 
 	msg := Message{
-		To:      u.Email,
-		Subject: "user activation",
-		Data:    template.HTML(signedurl),
+		To:       u.Email,
+		Subject:  "user activation",
+		Template: "confirmation-email",
+		Data:     template.HTML(signedurl),
 	}
 
 	app.sendEmail(msg)
@@ -106,5 +107,30 @@ func (app *application) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Request) {
+	url := r.RequestURI
+	app.InfoLogger.Println(url)
+	testuri := fmt.Sprintf("http://localhost%s", url)
 
+	valid := VerifyToken(testuri)
+
+	if !valid {
+		app.Session.Put(r.Context(), "error", "invalid token")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	user, err := app.Store.User.GetByEmail(r.URL.Query().Get("email"))
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "user not found")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	user.Active = 1
+	if err := user.Update(); err != nil {
+		app.Session.Put(r.Context(), "error", "user cannot updated")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	app.Session.Put(r.Context(), "flash", "user activated. now you can login")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
