@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/arshiabh/email-concurrency/cmd/web/data"
@@ -61,7 +63,40 @@ func (app *application) HandleRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) HandlePostRegister(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.ErroLogger.Println(err)
+	}
+	//to-do validate form value we get
+	u := data.User{
+		Email:     r.Form.Get("email"),
+		FirstName: r.Form.Get("firstname"),
+		LastName:  r.Form.Get("lastname"),
+		Password:  r.Form.Get("password"),
+		IsAdmin:   0,
+		Active:    0,
+	}
 
+	_, err = app.Store.User.Insert(u)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "cannot create user!")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	url := fmt.Sprintf("http://localhost/activate?email=%s", u.Email)
+	signedurl := GenerateTokenFromString(url)
+	app.InfoLogger.Println(signedurl)
+
+	msg := Message{
+		To:      u.Email,
+		Subject: "user activation",
+		Data:    template.HTML(signedurl),
+	}
+
+	app.sendEmail(msg)
+	app.Session.Put(r.Context(), "flash", "check your email for activation")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *application) HandleLogout(w http.ResponseWriter, r *http.Request) {
