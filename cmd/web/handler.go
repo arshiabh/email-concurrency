@@ -54,7 +54,6 @@ func (app *application) HandlePostLogin(w http.ResponseWriter, r *http.Request) 
 	app.Session.Put(r.Context(), "userID", user.ID)
 	app.Session.Put(r.Context(), "user", user)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
-
 }
 
 func (app *application) HandleRegister(w http.ResponseWriter, r *http.Request) {

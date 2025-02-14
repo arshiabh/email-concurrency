@@ -38,6 +38,7 @@ type Message struct {
 }
 
 func (app *application) listernForEmail() {
+	//block here to use value of chan
 	for {
 		select {
 		case msg := <-app.Mailer.MailerChan:
@@ -49,9 +50,7 @@ func (app *application) listernForEmail() {
 		}
 	}
 }
-
 // a function to listen for messages on the MailerChan
-
 func (m *Mail) sendMail(msg Message, errorChan chan error) {
 	defer m.Wait.Done()
 	if msg.Template == "" {
