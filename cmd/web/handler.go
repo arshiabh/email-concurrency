@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/arshiabh/email-concurrency/cmd/web/data"
 )
@@ -149,8 +150,25 @@ func (app *application) HandleChooseSubscription(w http.ResponseWriter, r *http.
 	}
 
 	dataMap := make(map[string]any)
-	dataMap["data"] = plans
+	dataMap["plans"] = plans
 	app.render(w, r, "plans.page.gohtml", &TemplateData{
 		Data: dataMap,
 	})
+}
+
+func (app *application) HandleSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	user, ok := app.Session.Get(r.Context(), "user").(data.User)
+	if !ok {
+		app.Session.Put(r.Context(), "flash", "user is not authenticated!")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	idStr := r.URL.Query().Get("id")
+	id, _ := strconv.Atoi(idStr)
+	plan, err := app.Store.Plan.GetOne(id)
+	if err != nil {
+		app.ErroLogger.Println(err)
+		return
+	}
+	app.InfoLogger.Println(plan, user)
 }
