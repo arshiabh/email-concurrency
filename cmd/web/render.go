@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"time"
+
+	"github.com/arshiabh/email-concurrency/cmd/web/data"
 )
 
 var pathToTemplate = "./cmd/web/templates"
@@ -19,6 +21,7 @@ type TemplateData struct {
 	Error         string
 	Authenticated bool
 	Now           time.Time
+	User          *data.User
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -52,6 +55,12 @@ func (app *application) AddDefaultData(td *TemplateData, r *http.Request) *Templ
 	td.Error = app.Session.PopString(r.Context(), "error")
 	if app.IsAuthenticated(r) {
 		td.Authenticated = true
+		user, ok := app.Session.Get(r.Context(), "user").(data.User)
+		if !ok {
+			app.ErroLogger.Println("cannot get user from context")
+		} else {
+			td.User = &user
+		}
 	}
 	td.Now = time.Now()
 	return td

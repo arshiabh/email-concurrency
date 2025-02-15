@@ -90,7 +90,7 @@ func (app *application) HandlePostRegister(w http.ResponseWriter, r *http.Reques
 
 	msg := Message{
 		To:       u.Email,
-		Subject:  "user activation",
+		Subject:  "User Activation",
 		Template: "confirmation-email",
 		Data:     template.HTML(signedurl),
 	}
@@ -115,19 +115,19 @@ func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Reques
 
 	if !valid {
 		app.Session.Put(r.Context(), "error", "invalid token")
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	user, err := app.Store.User.GetByEmail(r.URL.Query().Get("email"))
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "user not found")
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 	user.Active = 1
 	if err := user.Update(); err != nil {
 		app.Session.Put(r.Context(), "error", "user cannot updated")
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
