@@ -134,3 +134,23 @@ func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Reques
 	app.Session.Put(r.Context(), "flash", "user activated. now you can login")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+func (app *application) HandleChooseSubscription(w http.ResponseWriter, r *http.Request) {
+	if !app.Session.Exists(r.Context(), "userID") {
+		app.Session.Put(r.Context(), "error", "user is not authenticated!")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	plans, err := app.Store.Plan.GetAll()
+	if err != nil {
+		app.ErroLogger.Println(err)
+		return
+	}
+
+	dataMap := make(map[string]any)
+	dataMap["data"] = plans
+	app.render(w, r, "plans.page.gohtml", &TemplateData{
+		Data: dataMap,
+	})
+}
