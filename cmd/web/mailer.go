@@ -42,6 +42,7 @@ func (app *application) listernForEmail() {
 	for {
 		select {
 		case msg := <-app.Mailer.MailerChan:
+			//use go becuse we add(1) before 
 			go app.Mailer.sendMail(msg, make(chan error))
 		case err := <-app.Mailer.ErrorChan:
 			app.ErroLogger.Println(err)

@@ -16,13 +16,15 @@ import (
 )
 
 type application struct {
-	Session    *scs.SessionManager
-	DB         *sql.DB
-	InfoLogger *log.Logger
-	ErroLogger *log.Logger
-	Wait       *sync.WaitGroup
-	Store      *data.Store
-	Mailer     Mail
+	Session       *scs.SessionManager
+	DB            *sql.DB
+	InfoLogger    *log.Logger
+	ErroLogger    *log.Logger
+	Wait          *sync.WaitGroup
+	Store         *data.Store
+	Mailer        Mail
+	ErrorChan     chan error
+	ErrorChanDone chan bool
 }
 
 func createMail(wg *sync.WaitGroup) Mail {

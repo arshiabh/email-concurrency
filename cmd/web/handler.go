@@ -161,8 +161,29 @@ func (app *application) HandleSubscribeToPlan(w http.ResponseWriter, r *http.Req
 	planID, _ := strconv.Atoi(id)
 	plan, err := app.Store.Plan.GetOne(planID)
 	if err != nil {
-		app.ErroLogger.Println(err)
+		app.Session.Put(r.Context(), "error", "unable to find plan")
+		http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
 		return
 	}
-	app.InfoLogger.Println(plan, user)
+
+	app.Wait.Add(1)
+	go func() {
+		defer app.Wait.Done()
+		invoice, err := app.invoice(user, plan)
+		if err != nil {
+			app.ErrorChan <- err
+		}
+		msg := Message{
+			To:       user.Email,
+			Subject:  "Your Invoice",
+			Data:     invoice,
+			Template: "invoice",
+		}
+		app.sendEmail(msg)
+	}()
+
+}
+
+func (app *application) invoice(u data.User, plan *data.Plan) (string, error) {
+	return plan.PlanAmountFormatted, nil
 }

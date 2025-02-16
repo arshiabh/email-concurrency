@@ -25,14 +25,17 @@ func main() {
 	mail := createMail(&wg)
 
 	app := &application{
-		Session:    session,
-		DB:         db,
-		Wait:       &wg,
-		InfoLogger: infoLogger,
-		ErroLogger: errorLogger,
-		Store:      &store,
-		Mailer:     mail,
+		Session:       session,
+		DB:            db,
+		Wait:          &wg,
+		InfoLogger:    infoLogger,
+		ErroLogger:    errorLogger,
+		Store:         &store,
+		Mailer:        mail,
+		ErrorChan:     make(chan error),
+		ErrorChanDone: make(chan bool),
 	}
+	go app.listenForError()
 	//listern for shutdown
 	go app.listenForShutdown()
 	//listen for email
@@ -40,6 +43,17 @@ func main() {
 	mux := app.mount()
 	if err := app.run(mux); err != nil {
 		app.ErroLogger.Fatal(err)
+	}
+}
+
+func (app *application) listenForError() {
+	for {
+		select {
+		case err := <-app.ErrorChan:
+			app.ErroLogger.Println(err)
+		case <-app.ErrorChanDone:
+			return
+		}
 	}
 }
 
@@ -59,6 +73,8 @@ func (app *application) shutdown() {
 	//after wait all wg done trigger done to clean
 	app.Mailer.DoneChan <- true
 
+	close(app.ErrorChan)
+	close(app.ErrorChanDone)
 	app.InfoLogger.Println("closing server")
 	//close chan after to avoid getting data
 	close(app.Mailer.MailerChan)
