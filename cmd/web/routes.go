@@ -20,9 +20,17 @@ func (app *application) mount() http.Handler {
 		r.Post("/register", app.HandlePostRegister)
 		r.Get("/logout", app.HandleLogout)
 		r.Get("/activate", app.HandleActivateUser)
-		r.Get("/plans", app.HandleChooseSubscription)
-		r.Get("/subscribe", app.HandleSubscribeToPlan)
+		//takes another handle to it self
+		r.Mount("/members", app.authRouter())
 	})
+	return r
+}
+
+func (app *application) authRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(app.Auth)
+	r.Get("/subscribe", app.HandleSubscribeToPlan)
+	r.Get("/plans", app.HandleChooseSubscription)
 	return r
 }
 

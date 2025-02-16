@@ -137,12 +137,6 @@ func (app *application) HandleActivateUser(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) HandleChooseSubscription(w http.ResponseWriter, r *http.Request) {
-	if !app.Session.Exists(r.Context(), "userID") {
-		app.Session.Put(r.Context(), "error", "user is not authenticated!")
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
 	plans, err := app.Store.Plan.GetAll()
 	if err != nil {
 		app.ErroLogger.Println(err)
@@ -157,15 +151,15 @@ func (app *application) HandleChooseSubscription(w http.ResponseWriter, r *http.
 }
 
 func (app *application) HandleSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
-	user, ok := app.Session.Get(r.Context(), "user").(data.User)
+	user, ok := app.Session.Get(r.Context(), "userID").(data.User)
 	if !ok {
-		app.Session.Put(r.Context(), "flash", "user is not authenticated!")
+		app.Session.Put(r.Context(), "error", "first login!")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	idStr := r.URL.Query().Get("id")
-	id, _ := strconv.Atoi(idStr)
-	plan, err := app.Store.Plan.GetOne(id)
+	id := r.URL.Query().Get("id")
+	planID, _ := strconv.Atoi(id)
+	plan, err := app.Store.Plan.GetOne(planID)
 	if err != nil {
 		app.ErroLogger.Println(err)
 		return
