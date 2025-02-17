@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/arshiabh/email-concurrency/cmd/web/data"
+	"github.com/phpdave11/gofpdf"
 )
 
 func (app *application) HandleHome(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +183,19 @@ func (app *application) HandleSubscribeToPlan(w http.ResponseWriter, r *http.Req
 		app.sendEmail(msg)
 	}()
 
+	app.Wait.Add(1)
+	go func() {
+		defer app.Wait.Done()
+		pdf := app.generatePDF()
+
+	}()
+
+}
+
+func (app *application) generatePDF() *gofpdf.Fpdf {
+	pdf := gofpdf.New("P", "mm", "Letter", "")
+	pdf.SetMargins(10, 13, 10)
+	return pdf
 }
 
 func (app *application) invoice(u data.User, plan *data.Plan) (string, error) {
